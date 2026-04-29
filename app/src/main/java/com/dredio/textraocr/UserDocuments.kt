@@ -66,6 +66,19 @@ fun openDocumentUri(
     displayName: String = displayNameForUri(context, uri)
 ) {
     if (canOpenInternally(mimeType, displayName)) {
+        if (isImageDocument(mimeType, displayName) && AppSettings.isAutoOcrImageOpenEnabled(context)) {
+            context.startActivity(
+                Intent(context, OcrResultActivity::class.java).apply {
+                    putStringArrayListExtra(
+                        DocumentScannerActivity.EXTRA_IMAGE_URIS,
+                        arrayListOf(uri.toString())
+                    )
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+            )
+            return
+        }
+
         context.startActivity(
             DocumentViewerActivity.createIntent(
                 context = context,
@@ -80,6 +93,15 @@ fun openDocumentUri(
     }
 
     openExternalDocument(context, uri, mimeType)
+}
+
+private fun isImageDocument(mimeType: String?, displayName: String): Boolean {
+    val normalizedMime = mimeType?.lowercase().orEmpty()
+    val normalizedName = displayName.lowercase()
+    return normalizedMime.startsWith("image/") ||
+        normalizedName.endsWith(".jpg") ||
+        normalizedName.endsWith(".jpeg") ||
+        normalizedName.endsWith(".png")
 }
 
 fun openExternalDocument(

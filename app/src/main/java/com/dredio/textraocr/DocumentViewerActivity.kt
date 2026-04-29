@@ -51,7 +51,7 @@ class DocumentViewerActivity : ComponentActivity() {
         }
 
         setContent {
-            TextraOcrTheme {
+            TextraOcrTheme(darkTheme = AppSettings.isDarkThemeEnabled(this)) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

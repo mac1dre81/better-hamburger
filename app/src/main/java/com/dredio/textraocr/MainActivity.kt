@@ -8,11 +8,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,7 +24,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -37,17 +40,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.dredio.textraocr.ui.theme.TextraOcrTheme
 import java.text.DateFormat
 
 class MainActivity : ComponentActivity() {
     private var savedFiles by mutableStateOf<List<UserDocumentFile>>(emptyList())
     private var blackWhitePreviewEnabled by mutableStateOf(false)
+    private var isDarkThemeEnabled by mutableStateOf(false)
+    private var autoOcrImageOpenEnabled by mutableStateOf(true)
     private var showSettingsDialog by mutableStateOf(false)
     private var premiumState by mutableStateOf(PremiumUiState())
     private var remainingFreeScans by mutableStateOf(0)
@@ -87,53 +95,65 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            TextraOcrTheme {
+            TextraOcrTheme(darkTheme = isDarkThemeEnabled) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Scaffold { innerPadding ->
-                        HomeScreen(
-                            modifier = Modifier
-                                .padding(innerPadding)
-                                .windowInsetsPadding(WindowInsets.safeDrawing),
-                            savedFiles = savedFiles,
-                            remainingFreeScans = remainingFreeScans,
-                            isPremium = premiumState.isPremium,
-                            blackWhitePreviewEnabled = blackWhitePreviewEnabled,
-                            showAds = !premiumState.isPremium,
-                            onScanClick = {
-                                if (!premiumState.isPremium && remainingFreeScans <= 0) {
-                                    Toast.makeText(
-                                        this,
-                                        getString(R.string.daily_limit_reached),
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                } else {
-                                    AppDiagnostics.logBreadcrumb(this, "Launching document scanner")
-                                    startActivity(Intent(this, DocumentScannerActivity::class.java))
-                                }
-                            },
-                            onOpenFileClick = {
-                                openDocumentLauncher.launch(arrayOf("text/*", "application/pdf", "image/*"))
-                            },
-                            onOpenSavedFile = { file ->
-                                openUserDocument(this, file.file)
-                            },
-                            onSettingsClick = { showSettingsDialog = true }
-                        )
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            HomeScreen(
+                                modifier = Modifier
+                                    .padding(innerPadding)
+                                    .windowInsetsPadding(WindowInsets.safeDrawing),
+                                savedFiles = savedFiles,
+                                remainingFreeScans = remainingFreeScans,
+                                isPremium = premiumState.isPremium,
+                                blackWhitePreviewEnabled = blackWhitePreviewEnabled,
+                                showAds = !premiumState.isPremium,
+                                onScanClick = {
+                                    if (!premiumState.isPremium && remainingFreeScans <= 0) {
+                                        Toast.makeText(
+                                            this,
+                                            getString(R.string.daily_limit_reached),
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    } else {
+                                        AppDiagnostics.logBreadcrumb(this, "Launching document scanner")
+                                        startActivity(Intent(this, DocumentScannerActivity::class.java))
+                                    }
+                                },
+                                onOpenFileClick = {
+                                    openDocumentLauncher.launch(arrayOf("text/*", "application/pdf", "image/*"))
+                                },
+                                onOpenSavedFile = { file ->
+                                    openUserDocument(this, file.file)
+                                },
+                                onSettingsClick = { showSettingsDialog = true }
+                            )
 
                         if (showSettingsDialog) {
                             HomeSettingsDialog(
                                 blackWhitePreviewEnabled = blackWhitePreviewEnabled,
+                                isDarkThemeEnabled = isDarkThemeEnabled,
+                                autoOcrImageOpenEnabled = autoOcrImageOpenEnabled,
                                 isPremium = premiumState.isPremium,
                                 remainingFreeScans = remainingFreeScans,
+                                availableProducts = premiumState.availableProducts,
                                 onBlackWhitePreviewChanged = { enabled ->
                                     blackWhitePreviewEnabled = enabled
                                     AppSettings.setBlackWhitePreviewEnabled(this, enabled)
                                 },
-                                onSubscribeClick = {
-                                    if (!billingManager.launchSubscription(this)) {
+                                onDarkThemeChanged = { enabled ->
+                                    isDarkThemeEnabled = enabled
+                                    AppSettings.setDarkThemeEnabled(this, enabled)
+                                },
+                                onAutoOcrImageOpenChanged = { enabled ->
+                                    autoOcrImageOpenEnabled = enabled
+                                    AppSettings.setAutoOcrImageOpenEnabled(this, enabled)
+                                },
+                                onSubscribeProduct = { productDetails ->
+                                    if (!billingManager.launchSubscription(this, productDetails)) {
                                         Toast.makeText(
                                             this,
                                             getString(R.string.subscription_unavailable),
@@ -163,6 +183,8 @@ class MainActivity : ComponentActivity() {
     private fun refreshUiState() {
         savedFiles = listUserDocumentFiles(this)
         blackWhitePreviewEnabled = AppSettings.isBlackWhitePreviewEnabled(this)
+        isDarkThemeEnabled = AppSettings.isDarkThemeEnabled(this)
+        autoOcrImageOpenEnabled = AppSettings.isAutoOcrImageOpenEnabled(this)
         remainingFreeScans = AppSettings.remainingFreeScans(this)
         if (!premiumState.isPremium) {
             premiumState = premiumState.copy(isPremium = AppSettings.isPremiumCached(this))
@@ -213,8 +235,16 @@ private fun HomeScreen(
         SettingsSummaryCard(
             remainingFreeScans = remainingFreeScans,
             isPremium = isPremium,
-            blackWhitePreviewEnabled = blackWhitePreviewEnabled
+            blackWhitePreviewEnabled = blackWhitePreviewEnabled,
+            isDarkThemeEnabled = isDarkThemeEnabled,
+            autoOcrImageOpenEnabled = autoOcrImageOpenEnabled
         )
+        if (!isPremium) {
+            Spacer(modifier = Modifier.height(16.dp))
+            PremiumPricingCard(
+                onOpenSettings = onSettingsClick
+            )
+        }
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = onScanClick,
@@ -264,10 +294,47 @@ private fun HomeScreen(
 }
 
 @Composable
+private fun PremiumPricingCard(
+    onOpenSettings: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.pricing_section_title),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = stringResource(R.string.pricing_section_description),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Button(
+                onClick = onOpenSettings,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = stringResource(R.string.view_pricing_settings))
+            }
+        }
+    }
+}
+
+@Composable
 private fun SettingsSummaryCard(
     remainingFreeScans: Int,
     isPremium: Boolean,
-    blackWhitePreviewEnabled: Boolean
+    blackWhitePreviewEnabled: Boolean,
+    isDarkThemeEnabled: Boolean,
+    autoOcrImageOpenEnabled: Boolean
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -304,6 +371,24 @@ private fun SettingsSummaryCard(
                     stringResource(
                         if (blackWhitePreviewEnabled) R.string.enabled else R.string.disabled
                     )
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = stringResource(
+                    R.string.dark_theme_label
+                ) + ": " + stringResource(
+                    if (isDarkThemeEnabled) R.string.enabled else R.string.disabled
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = stringResource(
+                    R.string.auto_ocr_image_open_label
+                ) + ": " + stringResource(
+                    if (autoOcrImageOpenEnabled) R.string.enabled else R.string.disabled
                 ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -357,73 +442,184 @@ private fun SavedFileCard(
 @Composable
 private fun HomeSettingsDialog(
     blackWhitePreviewEnabled: Boolean,
+    isDarkThemeEnabled: Boolean,
+    autoOcrImageOpenEnabled: Boolean,
     isPremium: Boolean,
     remainingFreeScans: Int,
+    availableProducts: List<com.android.billingclient.api.ProductDetails>,
     onBlackWhitePreviewChanged: (Boolean) -> Unit,
-    onSubscribeClick: () -> Unit,
+    onDarkThemeChanged: (Boolean) -> Unit,
+    onAutoOcrImageOpenChanged: (Boolean) -> Unit,
+    onSubscribeProduct: (com.android.billingclient.api.ProductDetails) -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = stringResource(R.string.settings_title)) },
-        text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.daily_limit_message),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    text = stringResource(
-                        R.string.remaining_scans_template,
-                        remainingFreeScans,
-                        AppSettings.FREE_DAILY_SCAN_LIMIT
-                    ),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
-                        text = stringResource(R.string.black_white_preview),
+                        text = stringResource(R.string.settings_title),
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+
+                    Text(
+                        text = stringResource(R.string.daily_limit_message),
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    Switch(
+
+                    Text(
+                        text = stringResource(
+                            R.string.remaining_scans_template,
+                            remainingFreeScans,
+                            AppSettings.FREE_DAILY_SCAN_LIMIT
+                        ),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    SettingsToggleRow(
+                        label = stringResource(R.string.black_white_preview),
                         checked = blackWhitePreviewEnabled,
                         onCheckedChange = onBlackWhitePreviewChanged
                     )
-                }
-                Text(
-                    text = stringResource(R.string.premium_benefits),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = stringResource(
-                        R.string.premium_status_template,
-                        stringResource(
-                            if (isPremium) R.string.premium_status_premium else R.string.premium_status_free
+
+                    SettingsToggleRow(
+                        label = stringResource(R.string.dark_theme_label),
+                        checked = isDarkThemeEnabled,
+                        onCheckedChange = onDarkThemeChanged
+                    )
+
+                    SettingsToggleRow(
+                        label = stringResource(R.string.auto_ocr_image_open_label),
+                        checked = autoOcrImageOpenEnabled,
+                        onCheckedChange = onAutoOcrImageOpenChanged
+                    )
+
+                    Text(
+                        text = stringResource(R.string.premium_benefits),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Text(
+                        text = stringResource(
+                            R.string.premium_status_template,
+                            stringResource(
+                                if (isPremium) R.string.premium_status_premium else R.string.premium_status_free
+                            )
+                        ),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    if (!isPremium) {
+                        Text(
+                            text = stringResource(R.string.subscription_plans_title),
+                            style = MaterialTheme.typography.titleMedium
                         )
-                    ),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                if (!isPremium) {
+                        Text(
+                            text = stringResource(R.string.subscription_purchase_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (availableProducts.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.subscription_unavailable),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        } else {
+                            val weeklyProduct = availableProducts.firstOrNull { it.productId == "textraocr_premium_weekly" }
+                            val monthlyProduct = availableProducts.firstOrNull { it.productId == "textraocr_premium_monthly" }
+                            val yearlyProduct = availableProducts.firstOrNull { it.productId == "textraocr_premium_yearly" }
+
+                            listOf(
+                                weeklyProduct to stringResource(R.string.subscription_weekly_label),
+                                monthlyProduct to stringResource(R.string.subscription_monthly_label),
+                                yearlyProduct to stringResource(R.string.subscription_yearly_label)
+                            ).forEach { (product, label) ->
+                                product?.let {
+                                    Button(
+                                        onClick = { onSubscribeProduct(it) },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(text = label)
+                                    }
+                                }
+                            }
+
+                            availableProducts.filter { product ->
+                                product.productId !in listOf(
+                                    "textraocr_premium_weekly",
+                                    "textraocr_premium_monthly",
+                                    "textraocr_premium_yearly"
+                                )
+                            }.forEach { product ->
+                                Button(
+                                    onClick = { onSubscribeProduct(product) },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(text = product.title)
+                                }
+                            }
+                        }
+                    }
+
                     Button(
-                        onClick = onSubscribeClick,
+                        onClick = onDismiss,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(text = stringResource(R.string.subscribe_premium))
+                        Text(text = stringResource(R.string.cancel))
                     }
                 }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.cancel))
+
+                if (!isPremium) {
+                    BannerAdView(
+                        adUnitId = stringResource(R.string.admob_banner_test_unit_id),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(140.dp)
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                    )
+                } else {
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
             }
         }
-    )
+    }
+}
+
+@Composable
+private fun SettingsToggleRow(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange
+        )
+    }
 }

@@ -70,6 +70,7 @@ data class OcrPreprocessingOptions(
     val deskewAdjustmentDegrees: Float = 0f,
     val denoiseEnabled: Boolean = true,
     val contrastEnabled: Boolean = true,
+    val contrastLevel: Float = 1.2f,
     val binarizeEnabled: Boolean = true,
 )
 

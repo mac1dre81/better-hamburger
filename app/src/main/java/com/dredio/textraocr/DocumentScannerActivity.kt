@@ -66,7 +66,7 @@ class DocumentScannerActivity : ComponentActivity() {
         AppDiagnostics.logBreadcrumb(this, "Document scanner screen created")
 
         setContent {
-            TextraOcrTheme {
+            TextraOcrTheme(darkTheme = AppSettings.isDarkThemeEnabled(this)) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

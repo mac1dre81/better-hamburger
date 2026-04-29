@@ -72,7 +72,12 @@ class ImagePreprocessor(
 
             val normalized = if (options.contrastEnabled) {
                 Mat().also { output ->
-                    Core.normalize(gray, output, 0.0, 255.0, Core.NORM_MINMAX)
+                    gray.convertTo(
+                        output,
+                        -1,
+                        options.contrastLevel.toDouble(),
+                        0.0
+                    )
                 }
             } else {
                 null

@@ -88,7 +88,7 @@ class OcrResultActivity : ComponentActivity() {
         val pdfPath = intent.getStringExtra(EXTRA_PDF_PATH)
 
         setContent {
-            TextraOcrTheme {
+            TextraOcrTheme(darkTheme = AppSettings.isDarkThemeEnabled(this)) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -749,6 +749,23 @@ private fun OcrScreen(
                             settingsDraft = settingsDraft.copy(contrastEnabled = checked)
                         }
                     )
+                    if (settingsDraft.contrastEnabled) {
+                        Text(
+                            text = String.format(
+                                Locale.US,
+                                stringResource(R.string.contrast_level_template),
+                                settingsDraft.contrastLevel
+                            ),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Slider(
+                            value = settingsDraft.contrastLevel,
+                            onValueChange = { value ->
+                                settingsDraft = settingsDraft.copy(contrastLevel = value)
+                            },
+                            valueRange = 0.5f..2.0f
+                        )
+                    }
                     PreprocessingToggleRow(
                         label = binarizeLabel,
                         checked = settingsDraft.binarizeEnabled,
