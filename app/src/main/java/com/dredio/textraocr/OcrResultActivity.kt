@@ -174,6 +174,7 @@ private fun OcrScreen(
     var blackWhitePreviewEnabled by remember {
         mutableStateOf(AppSettings.isBlackWhitePreviewEnabled(context))
     }
+    var hasAutoSaved by remember { mutableStateOf(false) }
     val textFocusRequester = remember { FocusRequester() }
 
     fun formatPreprocessingSummary(metadata: PreprocessingMetadata): String {
@@ -254,6 +255,15 @@ private fun OcrScreen(
                     parsedPages
                 }
                 selectedPageIndex = 0
+
+                if (AppSettings.isAutoSaveOcrEnabled(context) && !hasAutoSaved && parsedPages.any { it.imageUri != Uri.EMPTY }) {
+                    hasAutoSaved = true
+                    saveOcrResult(
+                        AppSettings.getDefaultOutputFormat(context),
+                        closeAfterSave = false,
+                        showToast = true
+                    )
+                }
 
                 AppDiagnostics.logBreadcrumb(
                     context,
@@ -364,7 +374,11 @@ private fun OcrScreen(
         }.trim()
     }
 
-    fun saveOcrResult(extension: String) {
+    fun saveOcrResult(
+        extension: String,
+        closeAfterSave: Boolean = true,
+        showToast: Boolean = true
+    ) {
         scope.launch {
             try {
                 val mergedText = mergedRecognizedText()
@@ -391,8 +405,12 @@ private fun OcrScreen(
                     context,
                     "OCR result saved to ${AppDiagnostics.describeUri(Uri.fromFile(file).toString())}"
                 )
-                Toast.makeText(context, savedAsTemplate.format(file.name), Toast.LENGTH_SHORT).show()
-                onClose()
+                if (showToast) {
+                    Toast.makeText(context, savedAsTemplate.format(file.name), Toast.LENGTH_SHORT).show()
+                }
+                if (closeAfterSave) {
+                    onClose()
+                }
             } catch (exception: Exception) {
                 AppDiagnostics.logBreadcrumb(context, "OCR result save failed", exception)
                 Toast.makeText(context, saveErrorText, Toast.LENGTH_SHORT).show()

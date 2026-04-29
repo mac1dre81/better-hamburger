@@ -56,6 +56,8 @@ class MainActivity : ComponentActivity() {
     private var blackWhitePreviewEnabled by mutableStateOf(false)
     private var isDarkThemeEnabled by mutableStateOf(false)
     private var autoOcrImageOpenEnabled by mutableStateOf(true)
+    private var autoSaveOcrEnabled by mutableStateOf(false)
+    private var defaultOutputFormat by mutableStateOf(AppSettings.DEFAULT_OCR_OUTPUT_FORMAT)
     private var showSettingsDialog by mutableStateOf(false)
     private var premiumState by mutableStateOf(PremiumUiState())
     private var remainingFreeScans by mutableStateOf(0)
@@ -137,6 +139,8 @@ class MainActivity : ComponentActivity() {
                                 blackWhitePreviewEnabled = blackWhitePreviewEnabled,
                                 isDarkThemeEnabled = isDarkThemeEnabled,
                                 autoOcrImageOpenEnabled = autoOcrImageOpenEnabled,
+                                autoSaveOcrEnabled = autoSaveOcrEnabled,
+                                defaultOutputFormat = defaultOutputFormat,
                                 isPremium = premiumState.isPremium,
                                 remainingFreeScans = remainingFreeScans,
                                 availableProducts = premiumState.availableProducts,
@@ -151,6 +155,14 @@ class MainActivity : ComponentActivity() {
                                 onAutoOcrImageOpenChanged = { enabled ->
                                     autoOcrImageOpenEnabled = enabled
                                     AppSettings.setAutoOcrImageOpenEnabled(this, enabled)
+                                },
+                                onAutoSaveOcrChanged = { enabled ->
+                                    autoSaveOcrEnabled = enabled
+                                    AppSettings.setAutoSaveOcrEnabled(this, enabled)
+                                },
+                                onDefaultOutputFormatChanged = { format ->
+                                    defaultOutputFormat = format
+                                    AppSettings.setDefaultOutputFormat(this, format)
                                 },
                                 onSubscribeProduct = { productDetails ->
                                     if (!billingManager.launchSubscription(this, productDetails)) {
@@ -193,6 +205,8 @@ class MainActivity : ComponentActivity() {
         blackWhitePreviewEnabled = AppSettings.isBlackWhitePreviewEnabled(this)
         isDarkThemeEnabled = AppSettings.isDarkThemeEnabled(this)
         autoOcrImageOpenEnabled = AppSettings.isAutoOcrImageOpenEnabled(this)
+        autoSaveOcrEnabled = AppSettings.isAutoSaveOcrEnabled(this)
+        defaultOutputFormat = AppSettings.getDefaultOutputFormat(this)
         remainingFreeScans = AppSettings.remainingFreeScans(this)
         if (!premiumState.isPremium) {
             premiumState = premiumState.copy(isPremium = AppSettings.isPremiumCached(this))
@@ -401,6 +415,20 @@ private fun SettingsSummaryCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Text(
+                text = stringResource(
+                    R.string.auto_save_ocr_label
+                ) + ": " + stringResource(
+                    if (autoSaveOcrEnabled) R.string.enabled else R.string.disabled
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = stringResource(R.string.default_output_format_label) + ": " + defaultOutputFormat,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -452,12 +480,16 @@ private fun HomeSettingsDialog(
     blackWhitePreviewEnabled: Boolean,
     isDarkThemeEnabled: Boolean,
     autoOcrImageOpenEnabled: Boolean,
+    autoSaveOcrEnabled: Boolean,
+    defaultOutputFormat: String,
     isPremium: Boolean,
     remainingFreeScans: Int,
     availableProducts: List<com.android.billingclient.api.ProductDetails>,
     onBlackWhitePreviewChanged: (Boolean) -> Unit,
     onDarkThemeChanged: (Boolean) -> Unit,
     onAutoOcrImageOpenChanged: (Boolean) -> Unit,
+    onAutoSaveOcrChanged: (Boolean) -> Unit,
+    onDefaultOutputFormatChanged: (String) -> Unit,
     onSubscribeProduct: (com.android.billingclient.api.ProductDetails) -> Unit,
     onRestorePurchases: () -> Unit,
     onDismiss: () -> Unit
@@ -517,6 +549,34 @@ private fun HomeSettingsDialog(
                         checked = autoOcrImageOpenEnabled,
                         onCheckedChange = onAutoOcrImageOpenChanged
                     )
+
+                    SettingsToggleRow(
+                        label = stringResource(R.string.auto_save_ocr_label),
+                        checked = autoSaveOcrEnabled,
+                        onCheckedChange = onAutoSaveOcrChanged
+                    )
+
+                    Text(
+                        text = stringResource(R.string.default_output_format_label),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = { onDefaultOutputFormatChanged(".txt") },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(text = stringResource(R.string.format_txt_label))
+                        }
+                        Button(
+                            onClick = { onDefaultOutputFormatChanged(".md") },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(text = stringResource(R.string.format_md_label))
+                        }
+                    }
 
                     Text(
                         text = stringResource(R.string.premium_benefits),

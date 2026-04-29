@@ -29,6 +29,11 @@
     <string name="view_pricing_settings">View premium pricing in Settings</string>
     <string name="dark_theme_label">Dark theme</string>
     <string name="auto_ocr_image_open_label">Auto run OCR when opening an image</string>
+    <string name="auto_save_ocr_label">Auto-save OCR results</string>
+    <string name="default_output_format_label">Default save format</string>
+    <string name="format_txt_label">Text (.txt)</string>
+    <string name="format_md_label">Markdown (.md)</string>
+    <string name="saved_auto_as">OCR saved automatically as %1$s</string>
     <string name="remaining_scans_template">Free scans left today: %1$d of %2$d</string>
     <string name="daily_limit_reached">Daily scan limit reached. Subscribe to Premium for unlimited scans.</string>
     <string name="daily_limit_message">Free accounts can scan up to 10 documents per day.</string>

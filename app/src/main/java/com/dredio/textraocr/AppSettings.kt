@@ -10,11 +10,14 @@ object AppSettings {
     private const val KEY_BLACK_WHITE_PREVIEW = "black_white_preview"
     private const val KEY_DARK_THEME = "dark_theme"
     private const val KEY_AUTO_OCR_IMAGE_OPEN = "auto_ocr_image_open"
+    private const val KEY_AUTO_SAVE_OCR = "auto_save_ocr"
+    private const val KEY_DEFAULT_OUTPUT_FORMAT = "default_output_format"
     private const val KEY_PREMIUM_CACHED = "premium_cached"
     private const val KEY_SCAN_DATE = "scan_date"
     private const val KEY_SCAN_COUNT = "scan_count"
 
     const val FREE_DAILY_SCAN_LIMIT = 10
+    const val DEFAULT_OCR_OUTPUT_FORMAT = ".txt"
 
     fun isBlackWhitePreviewEnabled(context: Context): Boolean {
         return prefs(context).getBoolean(KEY_BLACK_WHITE_PREVIEW, false)
@@ -38,6 +41,23 @@ object AppSettings {
 
     fun setAutoOcrImageOpenEnabled(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_AUTO_OCR_IMAGE_OPEN, enabled).apply()
+    }
+
+    fun isAutoSaveOcrEnabled(context: Context): Boolean {
+        return prefs(context).getBoolean(KEY_AUTO_SAVE_OCR, false)
+    }
+
+    fun setAutoSaveOcrEnabled(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_AUTO_SAVE_OCR, enabled).apply()
+    }
+
+    fun getDefaultOutputFormat(context: Context): String {
+        return prefs(context).getString(KEY_DEFAULT_OUTPUT_FORMAT, DEFAULT_OCR_OUTPUT_FORMAT)
+            ?: DEFAULT_OCR_OUTPUT_FORMAT
+    }
+
+    fun setDefaultOutputFormat(context: Context, format: String) {
+        prefs(context).edit().putString(KEY_DEFAULT_OUTPUT_FORMAT, format).apply()
     }
 
     fun isPremiumCached(context: Context): Boolean {
