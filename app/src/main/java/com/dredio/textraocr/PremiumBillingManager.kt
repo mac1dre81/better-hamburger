@@ -81,6 +81,12 @@ class PremiumBillingManager(
         return true
     }
 
+    fun refreshPurchases() {
+        if (billingClient.isReady) {
+            queryPurchases()
+        }
+    }
+
     fun stop() {
         if (billingClient.isReady) {
             billingClient.endConnection()

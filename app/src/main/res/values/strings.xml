@@ -23,6 +23,7 @@
     <string name="subscription_monthly_label">Monthly — $12.99/month</string>
     <string name="subscription_yearly_label">Yearly — $59.99/year</string>
     <string name="subscription_purchase_hint">All Premium plans remove ads and unlock unlimited scans.</string>
+    <string name="restore_purchases">Restore purchases</string>
     <string name="pricing_section_title">Premium plans</string>
     <string name="pricing_section_description">Upgrade to premium for no ads and unlimited OCR scans.</string>
     <string name="view_pricing_settings">View premium pricing in Settings</string>

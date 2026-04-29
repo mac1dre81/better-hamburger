@@ -161,6 +161,14 @@ class MainActivity : ComponentActivity() {
                                         ).show()
                                     }
                                 },
+                                onRestorePurchases = {
+                                    billingManager.refreshPurchases()
+                                    Toast.makeText(
+                                        this,
+                                        getString(R.string.subscription_purchase_hint),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                },
                                 onDismiss = { showSettingsDialog = false }
                             )
                         }
@@ -451,6 +459,7 @@ private fun HomeSettingsDialog(
     onDarkThemeChanged: (Boolean) -> Unit,
     onAutoOcrImageOpenChanged: (Boolean) -> Unit,
     onSubscribeProduct: (com.android.billingclient.api.ProductDetails) -> Unit,
+    onRestorePurchases: () -> Unit,
     onDismiss: () -> Unit
 ) {
     Dialog(
@@ -535,6 +544,12 @@ private fun HomeSettingsDialog(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Button(
+                            onClick = onRestorePurchases,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(text = stringResource(R.string.restore_purchases))
+                        }
                         if (availableProducts.isEmpty()) {
                             Text(
                                 text = stringResource(R.string.subscription_unavailable),
