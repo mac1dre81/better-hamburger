@@ -227,6 +227,56 @@ private fun OcrScreen(
         }
     }
 
+    fun mergedRecognizedText(): String {
+        return pages.joinToString(separator = "\n\n--- Page Break ---\n\n") { page ->
+            String.format(pageHeaderTemplate, page.pageNumber) + "\n" + page.editableText
+        }.trim()
+    }
+
+    fun saveOcrResult(
+        extension: String,
+        closeAfterSave: Boolean = true,
+        showToast: Boolean = true
+    ) {
+        scope.launch {
+            try {
+                val mergedText = mergedRecognizedText()
+                val file = createUserDocumentFile(
+                    context = context,
+                    prefix = "OCR_Result",
+                    extension = extension
+                )
+
+                withContext(Dispatchers.IO) {
+                    FileOutputStream(file).use { stream ->
+                        stream.write(mergedText.toByteArray())
+                    }
+                }
+
+                if (pdfPath != null) {
+                    AppDiagnostics.logBreadcrumb(
+                        context,
+                        "OCR result kept with source PDF ${AppDiagnostics.describeUri(Uri.fromFile(File(pdfPath)).toString())}"
+                    )
+                }
+
+                AppDiagnostics.logBreadcrumb(
+                    context,
+                    "OCR result saved to ${AppDiagnostics.describeUri(Uri.fromFile(file).toString())}"
+                )
+                if (showToast) {
+                    Toast.makeText(context, savedAsTemplate.format(file.name), Toast.LENGTH_SHORT).show()
+                }
+                if (closeAfterSave) {
+                    onClose()
+                }
+            } catch (exception: Exception) {
+                AppDiagnostics.logBreadcrumb(context, "OCR result save failed", exception)
+                Toast.makeText(context, saveErrorText, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     fun runOcr(preprocessingOptionsByPage: Map<Int, OcrPreprocessingOptions> = emptyMap()) {
         scope.launch {
             isLoading = true
@@ -364,56 +414,6 @@ private fun OcrScreen(
                 ).show()
             } finally {
                 isLoading = false
-            }
-        }
-    }
-
-    fun mergedRecognizedText(): String {
-        return pages.joinToString(separator = "\n\n--- Page Break ---\n\n") { page ->
-            String.format(pageHeaderTemplate, page.pageNumber) + "\n" + page.editableText
-        }.trim()
-    }
-
-    fun saveOcrResult(
-        extension: String,
-        closeAfterSave: Boolean = true,
-        showToast: Boolean = true
-    ) {
-        scope.launch {
-            try {
-                val mergedText = mergedRecognizedText()
-                val file = createUserDocumentFile(
-                    context = context,
-                    prefix = "OCR_Result",
-                    extension = extension
-                )
-
-                withContext(Dispatchers.IO) {
-                    FileOutputStream(file).use { stream ->
-                        stream.write(mergedText.toByteArray())
-                    }
-                }
-
-                if (pdfPath != null) {
-                    AppDiagnostics.logBreadcrumb(
-                        context,
-                        "OCR result kept with source PDF ${AppDiagnostics.describeUri(Uri.fromFile(File(pdfPath)).toString())}"
-                    )
-                }
-
-                AppDiagnostics.logBreadcrumb(
-                    context,
-                    "OCR result saved to ${AppDiagnostics.describeUri(Uri.fromFile(file).toString())}"
-                )
-                if (showToast) {
-                    Toast.makeText(context, savedAsTemplate.format(file.name), Toast.LENGTH_SHORT).show()
-                }
-                if (closeAfterSave) {
-                    onClose()
-                }
-            } catch (exception: Exception) {
-                AppDiagnostics.logBreadcrumb(context, "OCR result save failed", exception)
-                Toast.makeText(context, saveErrorText, Toast.LENGTH_SHORT).show()
             }
         }
     }

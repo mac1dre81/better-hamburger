@@ -23,6 +23,7 @@
     <string name="subscription_monthly_label">Monthly — $12.99/month</string>
     <string name="subscription_yearly_label">Yearly — $59.99/year</string>
     <string name="subscription_purchase_hint">All Premium plans remove ads and unlock unlimited scans.</string>
+    <string name="subscribe_premium_button">Subscribe for No ads and Unlimited Scans!</string>
     <string name="restore_purchases">Restore purchases</string>
     <string name="pricing_section_title">Premium plans</string>
     <string name="pricing_section_description">Upgrade to premium for no ads and unlimited OCR scans.</string>
@@ -33,6 +34,7 @@
     <string name="default_output_format_label">Default save format</string>
     <string name="format_txt_label">Text (.txt)</string>
     <string name="format_md_label">Markdown (.md)</string>
+    <string name="current_output_format">Current format: %1$s</string>
     <string name="saved_auto_as">OCR saved automatically as %1$s</string>
     <string name="remaining_scans_template">Free scans left today: %1$d of %2$d</string>
     <string name="daily_limit_reached">Daily scan limit reached. Subscribe to Premium for unlimited scans.</string>

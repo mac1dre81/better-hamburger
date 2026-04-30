@@ -44,7 +44,8 @@ class ImagePreprocessor(
                 message = "Unable to decode image from uri: $uri"
             )
 
-        val srcBgr = bitmapToBgrMat(sourceBitmap)
+        val scaledBitmap = scaleBitmapForOcr(sourceBitmap)
+        val srcBgr = bitmapToBgrMat(scaledBitmap)
         var deskewAngle = 0.0
 
         try {
@@ -59,7 +60,7 @@ class ImagePreprocessor(
             // 2) Denoise
             val denoised = if (options.denoiseEnabled) {
                 Mat().also { output ->
-                    Imgproc.medianBlur(deskewed, output, 3)
+                    Imgproc.GaussianBlur(deskewed, output, Size(3.0, 3.0), 0.0)
                 }
             } else {
                 null
@@ -83,8 +84,19 @@ class ImagePreprocessor(
                 null
             }
 
-            // 4) Adaptive threshold
-            val thresholdSource = normalized ?: gray
+            // 4) Sharpen before binarization
+            val sharpened = if (options.sharpenEnabled) {
+                Mat().also { output ->
+                    val kernel = Mat(3, 3, CvType.CV_32F)
+                    kernel.put(0, 0, 0.0, -1.0, 0.0, -1.0, 5.0, -1.0, 0.0, -1.0, 0.0)
+                    Imgproc.filter2D(normalized ?: gray, output, -1, kernel)
+                }
+            } else {
+                null
+            }
+
+            // 5) Adaptive threshold
+            val thresholdSource = sharpened ?: normalized ?: gray
             val binary = if (options.binarizeEnabled) {
                 Mat().also { output ->
                     Imgproc.adaptiveThreshold(
@@ -93,8 +105,8 @@ class ImagePreprocessor(
                         255.0,
                         Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
                         Imgproc.THRESH_BINARY,
-                        31,
-                        15.0
+                        options.adaptiveThresholdBlockSize.coerceAtLeast(15) or 1,
+                        options.adaptiveThresholdConstant
                     )
                 }
             } else {
@@ -109,6 +121,7 @@ class ImagePreprocessor(
                 denoised,
                 gray,
                 normalized,
+                sharpened,
                 binary
             )
 
@@ -139,6 +152,16 @@ class ImagePreprocessor(
                 BitmapFactory.decodeStream(input)
             }?.copy(Bitmap.Config.ARGB_8888, false)
         }.getOrNull()
+    }
+
+    private fun scaleBitmapForOcr(bitmap: Bitmap): Bitmap {
+        val targetWidth = 1600
+        if (bitmap.width >= targetWidth) {
+            return bitmap
+        }
+
+        val targetHeight = (bitmap.height.toFloat() * targetWidth / bitmap.width).toInt()
+        return Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
     }
 
     private fun bitmapToBgrMat(bitmap: Bitmap): Mat {
