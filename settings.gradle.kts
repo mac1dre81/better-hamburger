@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Textra OCR"
 include(":app")
+include(":compose-harness")

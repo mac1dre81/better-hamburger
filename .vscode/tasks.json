@@ -1,0 +1,22 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build-compose-harness-debug",
+			"type": "shell",
+			"command": ".\\gradlew",
+			"args": [
+				"clean",
+				":compose-harness:assembleDebug",
+				"--console=plain",
+				"--no-parallel",
+				"--rerun-tasks"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gradle"
+			],
+			"group": "build"
+		}
+	]
+}

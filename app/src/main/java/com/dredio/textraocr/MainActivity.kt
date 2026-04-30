@@ -28,8 +28,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -87,13 +87,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        billingManager = PremiumBillingManager(this) { state ->
-            premiumState = state
-            refreshUiState()
-        }
-        billingManager.start()
-        refreshUiState()
-
         setContent {
             TextraOcrTheme(darkTheme = darkThemeEnabled) {
                 Surface(
@@ -126,7 +119,9 @@ class MainActivity : ComponentActivity() {
                                 onOpenSavedFile = { file ->
                                     openUserDocument(this@MainActivity, file.file)
                                 },
-                                onSettingsClick = { showSettingsDialog = true },
+                                onSettingsClick = {
+                                    startActivity(SettingsActivity.createIntent(this@MainActivity))
+                                },
                                 onOpenSubscriptionScreen = { showSubscriptionDialog = true },
                                 premiumProducts = premiumState.availableProducts,
                                 premiumSubscriptionAvailable = premiumState.subscriptionAvailable,
@@ -191,7 +186,7 @@ class MainActivity : ComponentActivity() {
                                         defaultOutputFormat = it
                                         AppSettings.setDefaultOutputFormat(this@MainActivity, it)
                                     },
-                                            onDismiss = { showSettingsDialog = false }
+                                    onDismiss = { showSettingsDialog = false }
                                 )
                             }
 
@@ -224,6 +219,13 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        billingManager = PremiumBillingManager(this) { state ->
+            premiumState = state
+            refreshUiState()
+        }
+        billingManager.start()
+        refreshUiState()
     }
 
     override fun onResume() {
@@ -250,7 +252,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun HomeScreen(
+fun HomeScreen(
     modifier: Modifier = Modifier,
     savedFiles: List<UserDocumentFile>,
     remainingFreeScans: Int,
@@ -300,6 +302,7 @@ private fun HomeScreen(
         SettingsSummaryCard(
             isPremium = isPremium,
             remainingFreeScans = remainingFreeScans,
+            showSettingsButton = false,
             onOpenSettings = onSettingsClick
         )
 
@@ -417,7 +420,7 @@ private fun HomeSettingsDialog(
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Divider()
+                    HorizontalDivider()
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = stringResource(R.string.subscription_purchase_hint),
@@ -611,7 +614,7 @@ private fun PremiumPricingCard(
 }
 
 @Composable
-private fun SubscriptionDialog(
+fun SubscriptionDialog(
     availableProducts: List<ProductDetails>,
     subscriptionAvailable: Boolean,
     onSubscribeProduct: (ProductDetails) -> Unit,

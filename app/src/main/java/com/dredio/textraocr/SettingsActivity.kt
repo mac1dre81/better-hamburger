@@ -67,17 +67,6 @@ class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        billingManager = PremiumBillingManager(this) { state ->
-            isPremium = state.isPremium
-            subscriptionAvailable = state.subscriptionAvailable
-            availableProducts = state.availableProducts
-            refreshUiState()
-        }
-        billingManager.start()
-        refreshUiState()
-
-        showSubscriptionSection = intent.getBooleanExtra(EXTRA_OPEN_SUBSCRIPTION, false)
-
         setContent {
             TextraOcrTheme(darkTheme = darkThemeEnabled) {
                 Surface(
@@ -142,6 +131,17 @@ class SettingsActivity : ComponentActivity() {
                 }
             }
         }
+
+        billingManager = PremiumBillingManager(this) { state ->
+            isPremium = state.isPremium
+            subscriptionAvailable = state.subscriptionAvailable
+            availableProducts = state.availableProducts
+            refreshUiState()
+        }
+        billingManager.start()
+        refreshUiState()
+
+        showSubscriptionSection = intent.getBooleanExtra(EXTRA_OPEN_SUBSCRIPTION, false)
     }
 
     override fun onResume() {
@@ -166,7 +166,7 @@ class SettingsActivity : ComponentActivity() {
 }
 
 @Composable
-private fun SettingsScreen(
+fun SettingsScreen(
     isPremium: Boolean,
     subscriptionAvailable: Boolean,
     availableProducts: List<ProductDetails>,

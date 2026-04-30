@@ -12,12 +12,21 @@ object AppSettings {
     private const val KEY_AUTO_OCR_IMAGE_OPEN = "auto_ocr_image_open"
     private const val KEY_AUTO_SAVE_OCR = "auto_save_ocr"
     private const val KEY_DEFAULT_OUTPUT_FORMAT = "default_output_format"
+    private const val KEY_SAVE_DESTINATION = "save_destination"
+    private const val KEY_DEFAULT_PREPROCESSING_PROFILE = "default_preprocessing_profile"
     private const val KEY_PREMIUM_CACHED = "premium_cached"
     private const val KEY_SCAN_DATE = "scan_date"
     private const val KEY_SCAN_COUNT = "scan_count"
 
     const val FREE_DAILY_SCAN_LIMIT = 10
     const val DEFAULT_OCR_OUTPUT_FORMAT = ".txt"
+    const val SAVE_DESTINATION_LOCAL = "local"
+    const val SAVE_DESTINATION_SHARE = "share"
+    const val DEFAULT_SAVE_DESTINATION = SAVE_DESTINATION_LOCAL
+    const val PROFILE_BALANCED = "balanced"
+    const val PROFILE_CLEAN = "clean"
+    const val PROFILE_FAST = "fast"
+    const val DEFAULT_PREPROCESSING_PROFILE = PROFILE_BALANCED
 
     fun isBlackWhitePreviewEnabled(context: Context): Boolean {
         return prefs(context).getBoolean(KEY_BLACK_WHITE_PREVIEW, false)
@@ -58,6 +67,24 @@ object AppSettings {
 
     fun setDefaultOutputFormat(context: Context, format: String) {
         prefs(context).edit().putString(KEY_DEFAULT_OUTPUT_FORMAT, format).apply()
+    }
+
+    fun getSaveDestination(context: Context): String {
+        return prefs(context).getString(KEY_SAVE_DESTINATION, DEFAULT_SAVE_DESTINATION)
+            ?: DEFAULT_SAVE_DESTINATION
+    }
+
+    fun setSaveDestination(context: Context, destination: String) {
+        prefs(context).edit().putString(KEY_SAVE_DESTINATION, destination).apply()
+    }
+
+    fun getDefaultPreprocessingProfile(context: Context): String {
+        return prefs(context).getString(KEY_DEFAULT_PREPROCESSING_PROFILE, DEFAULT_PREPROCESSING_PROFILE)
+            ?: DEFAULT_PREPROCESSING_PROFILE
+    }
+
+    fun setDefaultPreprocessingProfile(context: Context, profile: String) {
+        prefs(context).edit().putString(KEY_DEFAULT_PREPROCESSING_PROFILE, profile).apply()
     }
 
     fun isPremiumCached(context: Context): Boolean {

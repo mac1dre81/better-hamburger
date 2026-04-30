@@ -45,35 +45,21 @@ class OcrSpellChecker(
             return
         }
 
-        session.getSuggestions(originalWords.map { TextInfo(it) }.toTypedArray(), 5)
+        session.getSentenceSuggestions(originalWords.map { TextInfo(it) }.toTypedArray(), 5)
     }
 
     override fun onGetSuggestions(results: Array<SuggestionsInfo>?) {
-        if (results.isNullOrEmpty()) {
+        // Word-level suggestions are not used directly when using sentence suggestions.
+    }
+
+    override fun onGetSentenceSuggestions(results: Array<SentenceSuggestionsInfo>?) {
+        val corrections = extractSpellCorrections(originalWords, results)
+        if (corrections.isEmpty()) {
             postResult(originalText)
             return
         }
 
-        var correctedText = originalText
-        results.forEachIndexed { index, suggestionsInfo ->
-            val original = originalWords.getOrNull(index) ?: return@forEachIndexed
-            if (suggestionsInfo.suggestionsCount <= 0) return@forEachIndexed
-
-            val candidate = suggestionsInfo.getSuggestionAt(0)
-            if (candidate.isNullOrBlank()) return@forEachIndexed
-            if (candidate.equals(original, ignoreCase = true)) return@forEachIndexed
-
-            correctedText = correctedText.replaceFirst(
-                Regex("\\b${Regex.escape(original)}\\b"),
-                candidate
-            )
-        }
-
-        postResult(correctedText)
-    }
-
-    override fun onGetSentenceSuggestions(results: Array<SentenceSuggestionsInfo>?) {
-        // Not used; word-level suggestions are sufficient for basic OCR correction.
+        postResult(applySpellCorrections(originalText, corrections))
     }
 
     private fun postResult(result: String) {
