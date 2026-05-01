@@ -178,8 +178,8 @@ class PremiumBillingManager(
     }
 
     companion object {
-        private const val PREMIUM_WEEKLY_PRODUCT_ID = "textraocr_premium_weekly"
-        private const val PREMIUM_MONTHLY_PRODUCT_ID = "textraocr_premium_monthly"
-        private const val PREMIUM_YEARLY_PRODUCT_ID = "textraocr_premium_yearly"
+        const val PREMIUM_WEEKLY_PRODUCT_ID = "textraocr_premium_weekly"
+        const val PREMIUM_MONTHLY_PRODUCT_ID = "textraocr_premium_monthly"
+        const val PREMIUM_YEARLY_PRODUCT_ID = "textraocr_premium_yearly"
     }
 }

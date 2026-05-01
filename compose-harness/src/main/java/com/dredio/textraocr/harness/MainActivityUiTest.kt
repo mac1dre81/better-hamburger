@@ -34,10 +34,11 @@ class MainActivityUiTest {
     }
 
     @Test
-    fun subscribeButtonOpensPurchasePopup() {
+    fun subscribeButtonOpensPricingPage() {
         val subscribeLabel = context.getString(R.string.subscribe_premium_button)
-        val plansTitle = context.getString(R.string.subscription_plans_title)
-        val unavailableText = context.getString(R.string.subscription_unavailable)
+        val plansTitle = context.getString(R.string.subscription_page_title)
+        val heroTitle = context.getString(R.string.subscription_page_hero_title)
+        val monthlyPlan = context.getString(R.string.subscription_plan_monthly_title)
 
         composeRule.waitUntilAtLeastOneExists(
             matcher = hasText(subscribeLabel),
@@ -50,6 +51,7 @@ class MainActivityUiTest {
             timeoutMillis = 15_000
         )
         composeRule.onAllNodesWithText(plansTitle).assertCountEquals(1)
-        composeRule.onAllNodesWithText(unavailableText).assertCountEquals(1)
+        composeRule.onAllNodesWithText(heroTitle).assertCountEquals(1)
+        composeRule.onAllNodesWithText(monthlyPlan).assertCountEquals(1)
     }
 }

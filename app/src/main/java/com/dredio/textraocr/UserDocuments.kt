@@ -123,6 +123,7 @@ fun openExternalDocument(
 
 private fun isUserVisibleDocument(file: File): Boolean {
     if (!file.isFile) return false
+    if (file.name.endsWith(".pdf", ignoreCase = true)) return false
     return file.name.startsWith("OCR_Result_") ||
         file.name.startsWith("Scanned_Document_") ||
         file.name.startsWith("Scanned_Page_")
@@ -133,7 +134,6 @@ fun mimeTypeForFile(fileName: String): String {
     return when (extension) {
         "txt" -> "text/plain"
         "md" -> "text/markdown"
-        "pdf" -> "application/pdf"
         "jpg", "jpeg" -> "image/jpeg"
         "png" -> "image/png"
         else -> MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: "*/*"

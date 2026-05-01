@@ -253,13 +253,6 @@ fun SettingsScreen(
                     ) {
                         Text(text = stringResource(R.string.format_md_label))
                     }
-                    OutlinedButton(
-                        onClick = { onDefaultOutputFormatChanged(".pdf") },
-                        modifier = Modifier.weight(1f),
-                        colors = if (defaultOutputFormat == ".pdf") ButtonDefaults.buttonColors() else ButtonDefaults.outlinedButtonColors()
-                    ) {
-                        Text(text = stringResource(R.string.format_pdf_label))
-                    }
                 }
                 Text(
                     text = stringResource(

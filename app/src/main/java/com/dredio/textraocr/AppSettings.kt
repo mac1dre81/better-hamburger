@@ -61,12 +61,13 @@ object AppSettings {
     }
 
     fun getDefaultOutputFormat(context: Context): String {
-        return prefs(context).getString(KEY_DEFAULT_OUTPUT_FORMAT, DEFAULT_OCR_OUTPUT_FORMAT)
+        val storedFormat = prefs(context).getString(KEY_DEFAULT_OUTPUT_FORMAT, DEFAULT_OCR_OUTPUT_FORMAT)
             ?: DEFAULT_OCR_OUTPUT_FORMAT
+        return normalizeOutputFormat(storedFormat)
     }
 
     fun setDefaultOutputFormat(context: Context, format: String) {
-        prefs(context).edit().putString(KEY_DEFAULT_OUTPUT_FORMAT, format).apply()
+        prefs(context).edit().putString(KEY_DEFAULT_OUTPUT_FORMAT, normalizeOutputFormat(format)).apply()
     }
 
     fun getSaveDestination(context: Context): String {
@@ -131,6 +132,13 @@ object AppSettings {
 
     private fun prefs(context: Context) =
         context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    private fun normalizeOutputFormat(format: String): String {
+        return when (format.lowercase(Locale.US)) {
+            ".md" -> ".md"
+            else -> DEFAULT_OCR_OUTPUT_FORMAT
+        }
+    }
 
     private val DAY_FORMAT = SimpleDateFormat("yyyy-MM-dd", Locale.US)
 }

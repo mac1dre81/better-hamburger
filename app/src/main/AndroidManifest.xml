@@ -46,9 +46,14 @@
             android:theme="@style/Theme.TextraOCR" />
 
         <activity
-            android:name=".SplashActivity"
+            android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.TextraOCR.Splash">
+            android:theme="@style/Theme.TextraOCR" />
+
+        <activity
+            android:name=".LauncherActivity"
+            android:exported="true"
+            android:theme="@style/Theme.TextraOCR">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -57,9 +62,14 @@
         </activity>
 
         <activity
-            android:name=".MainActivity"
-            android:exported="true"
+            android:name=".SubscriptionActivity"
+            android:exported="false"
             android:theme="@style/Theme.TextraOCR" />
+
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.TextraOCR.Splash" />
 
         <activity
             android:name=".SettingsActivity"

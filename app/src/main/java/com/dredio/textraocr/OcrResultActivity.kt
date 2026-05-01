@@ -63,7 +63,6 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.dredio.textraocr.DocumentScannerActivity.Companion.EXTRA_IMAGE_URIS
-import com.dredio.textraocr.DocumentScannerActivity.Companion.EXTRA_PDF_PATH
 import com.dredio.textraocr.ocr.LineResult
 import com.dredio.textraocr.ocr.OcrPage
 import com.dredio.textraocr.ocr.OcrPreprocessingOptions
@@ -85,7 +84,6 @@ class OcrResultActivity : ComponentActivity() {
 
         AppDiagnostics.logBreadcrumb(this, "OCR result screen created")
         val imageUris = intent.getStringArrayListExtra(EXTRA_IMAGE_URIS) ?: emptyList()
-        val pdfPath = intent.getStringExtra(EXTRA_PDF_PATH)
 
         setContent {
             TextraOcrTheme(darkTheme = AppSettings.isDarkThemeEnabled(this)) {
@@ -95,7 +93,6 @@ class OcrResultActivity : ComponentActivity() {
                 ) {
                     OcrScreen(
                         imageUris = imageUris,
-                        pdfPath = pdfPath,
                         onClose = { finish() }
                     )
                 }
@@ -120,7 +117,6 @@ private data class OcrUiPage(
 @Composable
 private fun OcrScreen(
     imageUris: List<String>,
-    pdfPath: String?,
     onClose: () -> Unit
 ) {
     val context = LocalContext.current
@@ -251,13 +247,6 @@ private fun OcrScreen(
                     FileOutputStream(file).use { stream ->
                         stream.write(mergedText.toByteArray())
                     }
-                }
-
-                if (pdfPath != null) {
-                    AppDiagnostics.logBreadcrumb(
-                        context,
-                        "OCR result kept with source PDF ${AppDiagnostics.describeUri(Uri.fromFile(File(pdfPath)).toString())}"
-                    )
                 }
 
                 AppDiagnostics.logBreadcrumb(

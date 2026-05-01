@@ -114,7 +114,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 },
                                 onOpenFileClick = {
-                                    openDocumentLauncher.launch(arrayOf("text/*", "application/pdf", "image/*"))
+                                    openDocumentLauncher.launch(arrayOf("text/*", "image/*"))
                                 },
                                 onOpenSavedFile = { file ->
                                     openUserDocument(this@MainActivity, file.file)
@@ -122,7 +122,9 @@ class MainActivity : ComponentActivity() {
                                 onSettingsClick = {
                                     startActivity(SettingsActivity.createIntent(this@MainActivity))
                                 },
-                                onOpenSubscriptionScreen = { showSubscriptionDialog = true },
+                                onOpenSubscriptionScreen = {
+                                    startActivity(SubscriptionActivity.createIntent(this@MainActivity))
+                                },
                                 premiumProducts = premiumState.availableProducts,
                                 premiumSubscriptionAvailable = premiumState.subscriptionAvailable,
                                 onSubscribeProduct = { productDetails ->
@@ -190,30 +192,6 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
 
-                            if (showSubscriptionDialog) {
-                                SubscriptionDialog(
-                                    availableProducts = premiumState.availableProducts,
-                                    subscriptionAvailable = premiumState.subscriptionAvailable,
-                                    onSubscribeProduct = { productDetails ->
-                                        if (!billingManager.launchSubscription(this@MainActivity, productDetails)) {
-                                            Toast.makeText(
-                                                this@MainActivity,
-                                                getString(R.string.subscription_unavailable),
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
-                                    },
-                                    onRestorePurchases = {
-                                        billingManager.refreshPurchases()
-                                        Toast.makeText(
-                                            this@MainActivity,
-                                            getString(R.string.restore_purchases),
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    },
-                                    onDismiss = { showSubscriptionDialog = false }
-                                )
-                            }
                         }
                     }
                 }

@@ -24,9 +24,20 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file("1stupsign.keystore")
+            storePassword = project.findProperty("storePassword") as? String ?: System.getenv("STORE_PASSWORD")
+            keyAlias = project.findProperty("keyAlias") as? String ?: System.getenv("KEY_ALIAS") ?: "my-key-alias"
+            keyPassword = project.findProperty("keyPassword") as? String ?: System.getenv("KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

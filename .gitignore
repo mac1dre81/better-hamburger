@@ -46,9 +46,9 @@ out/
 .kilo/
 
 # --- Signing secrets and private release material ---
-app/keystore.properties
-app/*.keystore
-app/*.jks
+keystore.properties
+*.keystore
+*.jks
 
 # --- Release artifacts / distribution outputs ---
 *.apk

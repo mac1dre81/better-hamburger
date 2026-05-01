@@ -27,11 +27,9 @@ import androidx.compose.ui.unit.dp
 import com.dredio.textraocr.ui.theme.TextraOcrTheme
 import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
 import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions.RESULT_FORMAT_JPEG
-import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions.RESULT_FORMAT_PDF
 import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions.SCANNER_MODE_FULL
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
-import java.io.File
 import java.io.FileOutputStream
 
 class DocumentScannerActivity : ComponentActivity() {
@@ -41,11 +39,6 @@ class DocumentScannerActivity : ComponentActivity() {
             if (result.resultCode == RESULT_OK) {
                 val scanResult = GmsDocumentScanningResult.fromActivityResultIntent(result.data)
 
-                var savedPdfFile: File? = null
-                scanResult?.pdf?.let { pdf ->
-                    savedPdfFile = savePdfToFilesDir(pdf.uri)
-                }
-
                 val pages = scanResult?.pages?.mapIndexed { index, page ->
                     saveImageToFilesDir(page.imageUri, index)?.toString() ?: page.imageUri.toString()
                 }.orEmpty()
@@ -53,7 +46,6 @@ class DocumentScannerActivity : ComponentActivity() {
                     AppSettings.recordCompletedScan(this)
                     val intent = Intent(this, OcrResultActivity::class.java).apply {
                         putStringArrayListExtra(EXTRA_IMAGE_URIS, ArrayList(pages))
-                        savedPdfFile?.let { putExtra(EXTRA_PDF_PATH, it.absolutePath) }
                     }
                     startActivity(intent)
                 }
@@ -109,7 +101,7 @@ class DocumentScannerActivity : ComponentActivity() {
         val options = GmsDocumentScannerOptions.Builder()
             .setGalleryImportAllowed(true)
             .setPageLimit(100)
-            .setResultFormats(RESULT_FORMAT_JPEG, RESULT_FORMAT_PDF)
+            .setResultFormats(RESULT_FORMAT_JPEG)
             .setScannerMode(SCANNER_MODE_FULL)
             .build()
 
@@ -131,33 +123,6 @@ class DocumentScannerActivity : ComponentActivity() {
                 ).show()
                 finish()
             }
-    }
-
-    private fun savePdfToFilesDir(uri: Uri): File? {
-        return try {
-            val file = createUserDocumentFile(
-                context = this,
-                prefix = "Scanned_Document",
-                extension = ".pdf"
-            )
-            val inputStream = contentResolver.openInputStream(uri)
-                ?: throw IllegalStateException("Unable to open scanned PDF stream")
-            inputStream.use { input ->
-                FileOutputStream(file).use { output ->
-                    input.copyTo(output)
-                }
-            }
-            AppDiagnostics.logBreadcrumb(
-                this,
-                "Scanner PDF saved to ${AppDiagnostics.describeUri(Uri.fromFile(file).toString())}"
-            )
-            Toast.makeText(this, getString(R.string.scanner_saved_as, file.name), Toast.LENGTH_LONG).show()
-            file
-        } catch (exception: Exception) {
-            AppDiagnostics.logBreadcrumb(this, "Error saving scanned document", exception)
-            Toast.makeText(this, getString(R.string.scanner_save_error), Toast.LENGTH_SHORT).show()
-            null
-        }
     }
 
     private fun saveImageToFilesDir(uri: Uri, pageIndex: Int): Uri? {
@@ -191,6 +156,5 @@ class DocumentScannerActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_IMAGE_URIS = "imageUris"
-        const val EXTRA_PDF_PATH = "pdfPath"
     }
 }
